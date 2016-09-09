@@ -2,6 +2,12 @@ var fs = require('fs');
 var marked = require('marked');
 var async = require('async');
 
+
+var docsOutPath = '../../docs/';
+var gpsLoggerFaqsPath = '../../gpslogger/src/main/assets/';
+
+getFaqMdsList();
+
 var renderer = new marked.Renderer();
 marked.options({
   renderer: renderer
@@ -63,8 +69,21 @@ function getTitleFromContents(markdown){
   return markdown.substring(firstPosition, endPosition).replace('#','').trim();
 }
 
+function getFaqMdsList(){
+  var mdsList = fs.readdirSync(gpsLoggerFaqsPath);
+  mdsList = mdsList.filter(function(val){
+    return val.endsWith('.md')
+  }).map(function(val){
+    return gpsLoggerFaqsPath + val;
+  });
+  
+  return mdsList;
+}
+
 function getMainPageFiles(){
   var allFiles = JSON.parse(fs.readFileSync('filesToProcess.json'));
+  //Inserts FAQ MDs into middle of main page MDs
+  allFiles.mainpage = allFiles.mainpage.slice(0,6).concat(getFaqMdsList()).concat(allFiles.mainpage.slice(6));
   return allFiles.mainpage;
 }
 
@@ -76,7 +95,7 @@ function getStandaloneFiles(){
 function renderMainPage(callback){
   
   var mdsToRender = getMainPageFiles();
-  var outFile = fs.createWriteStream('out/index.html')
+  var outFile = fs.createWriteStream(docsOutPath + 'index.html')
   outFile.on('error', function(err){console.log(err)});
   outFile.write(getTop(false,true));
 
@@ -112,7 +131,7 @@ function renderFullPages(callback){
         fs.readFile(fullPage.src, 'utf8', function(err,content){
              if (!err) {
                 console.log('--------------------------------------------------------\r\n Processing ' + fullPage.src + '\r\n--------------------------------------------------------\r\n')
-                var outFile = fs.createWriteStream('out/'+fullPage.out);
+                var outFile = fs.createWriteStream(docsOutPath + fullPage.out);
                 outFile.on('error', function(err){console.log(err)});
 
                 outFile.write(getTop(getTitleFromContents(content), false));
@@ -133,6 +152,12 @@ function renderFullPages(callback){
   );
 }
 
+function copyCssImagesToOutput(callback){
+    var ncp = require('ncp').ncp;
+    ncp('static',docsOutPath);
+    callback();
+}
 
-async.series([renderMainPage, renderFullPages]);
+
+async.series([copyCssImagesToOutput, renderMainPage, renderFullPages]);
 
