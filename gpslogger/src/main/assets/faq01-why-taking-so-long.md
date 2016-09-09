@@ -11,4 +11,4 @@ There can be several reasons reasons for this.
 
 **Mid flight** - if you are in a commercial aircraft, you are probably traveling too fast for your phone's hardware to keep up with the GPS signals.
 
-You can read more a little more on what's involved [here](pages/gps-fix-details/)
+You can read more a little more on what's involved [here](gps-fix-details.html)

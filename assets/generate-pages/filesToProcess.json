@@ -30,6 +30,10 @@
         {
             "src": "../../LICENSE.md",
             "out": "license.html"
+        },
+        {
+            "src": "../../gpslogger/src/main/assets/pages/gps-fix-details.md",
+            "out": "gps-fix-details.html"
         }
     ]
 }
