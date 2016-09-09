@@ -4,7 +4,7 @@ var async = require('async');
 
 
 var docsOutPath = '../../docs/';
-var gpsLoggerFaqsPath = '../../gpslogger/src/main/assets/';
+var gpsLoggerFaqsPath = '../text/faq/';
 
 getFaqMdsList();
 
