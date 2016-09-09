@@ -3,11 +3,6 @@ var marked = require('marked');
 var async = require('async');
 
 var renderer = new marked.Renderer();
-var mdsToRender = ['renderthis/a1-mainscreen.md', 'renderthis/b1-features.md',  'renderthis/ss02-logging-details.md', 'renderthis/faq07-settings-changed.md', 'renderthis/faq11-remove-notification.md']
-var outFile = fs.createWriteStream('out/out.html')
-
-
-outFile.on('error', function(err){console.log(err)});
 
 // Helper renderers
 marked.options({
@@ -28,29 +23,66 @@ renderer.heading = function (text, level) {
   
 }
 
-//Header
-outFile.write(fs.readFileSync('renderthis/top.html', 'utf8'));
+function renderMainPage(callback){
+  //Header
+  var mdsToRender = ['renderthis/a1-mainscreen.md', 'renderthis/b1-features.md',  'renderthis/ss02-logging-details.md', 'renderthis/faq07-settings-changed.md', 'renderthis/faq11-remove-notification.md']
+  var outFile = fs.createWriteStream('out/index.html')
+  outFile.on('error', function(err){console.log(err)});
+  outFile.write(fs.readFileSync('scaffolding/top.html', 'utf8'));
 
-async.eachSeries(mdsToRender,
-  function(filename, cb) {
-      fs.readFile(filename, 'utf8', function(err, content) {
+  async.eachSeries(mdsToRender,
+    function(filename, cb) {
+        fs.readFile(filename, 'utf8', function(err, content) {
+          console.log('--------------------------------------------------------\r\n Processing ' + filename + '\r\n--------------------------------------------------------\r\n')
+
+          if (!err) {
+          console.log(marked(content));
+          outFile.write("<section><div class='lead'>")
+          outFile.write( marked(content)+'\r\n');
+          outFile.write("</div></section>\r\n\r\n");
+          }
+
+          cb(err);
+        });
+    },
+    function(err, results){
+      //Footer
+      outFile.write(fs.readFileSync('scaffolding/bottom.html', 'utf8'));
+      outFile.end();
+      callback();
+    }
+  );
+}
+
+function renderFullPages(callback){
+  
+  // Now generate standalone pages
+  var fullPagesToRender = ['renderthis/privacypolicy.md']
+  var outFile = fs.createWriteStream('out/privacypolicy.html')
+
+  outFile.on('error', function(err){console.log(err)});
+
+  async.eachSeries(fullPagesToRender, 
+    function(filename,cb){
         console.log('--------------------------------------------------------\r\n Processing ' + filename + '\r\n--------------------------------------------------------\r\n')
-
-        if (!err) {
-         console.log(marked(content));
-         outFile.write("<section><div class='lead'>")
-         outFile.write( marked(content)+'\r\n');
-         outFile.write("</div></section>\r\n\r\n");
-        }
-
-        cb(err);
+        outFile.write(fs.readFileSync('scaffolding/top-light.html', 'utf8'));
+        fs.readFile(filename, 'utf8', function(err,content){
+        outFile.write("<section><div class='lead'>")
+        console.log(marked(content));
+        outFile.write(marked(content)+'\r\n')
+        outFile.write("</div></section>\r\n\r\n");
       });
-  },
-  function(err, results){
-    //Footer
-    outFile.write(fs.readFileSync('renderthis/bottom.html', 'utf8'));
-    outFile.end();
-  }
-)
+    },
+    function(err, results){
+      //Footer
+      outFile.write(fs.readFileSync('scaffolding/bottom-light.html', 'utf8'));
+      outFile.end();
+      callback();
+    }
+  );
+}
 
+
+
+async.series([renderMainPage, renderFullPages])
 
